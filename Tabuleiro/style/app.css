@@ -1,0 +1,18 @@
+#app {
+    height: 100vh;
+    display: grid;
+
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+}
+
+
+.box-white {
+    background-color: white;
+    position: relative;
+}
+
+.box-black {
+    background-color: black;
+    position: relative;
+}
