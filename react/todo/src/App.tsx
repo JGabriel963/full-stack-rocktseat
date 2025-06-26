@@ -1,7 +1,17 @@
+import { BrowserRouter, Route, Routes } from "react-router";
+import PageComponents from "./pages/page-components";
+import LayoutMain from "./pages/layout-main";
+import PageHome from "./pages/page-home";
+
 export default function App() {
   return (
-    <div className="min-h-screen">
-      <h1 className="text-2xl font-semibold tracking-tight">Hello World</h1>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route element={<LayoutMain />}>
+          <Route index element={<PageHome />} />
+          <Route path="/components" element={<PageComponents />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
