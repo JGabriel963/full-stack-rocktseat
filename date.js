@@ -1,11 +1,3 @@
-let date = new Date('2025-08-08T14:00:00')
-// formatar o dia para sempre ter 2 dígitos
-console.log(date.getDate().toString().padStart(2, 0))
-console.log((date.getMonth() + 1).toString().padStart(2, 0))
-
-console.log(date.toLocaleDateString())
-
-
 // Lesson 1
 // const days = [
 //   "Domingo",
@@ -50,3 +42,51 @@ console.log(date.toLocaleDateString())
 // date.setMinutes(0)
 // date.setSeconds(30)
 // console.log(date)
+
+let date = new Date('2025-08-08T14:00:00')
+// formatar o dia para sempre ter 2 dígitos
+console.log(date.getDate().toString().padStart(2, 0))
+console.log((date.getMonth() + 1).toString().padStart(2, 0))
+
+console.log(date.toLocaleDateString())
+
+let date = new Date('2025-08-18T14:00:00')
+// formatar o dia para sempre ter 2 dígitos
+console.log(date.getDate().toString().padStart(2, 0))
+console.log((date.getMonth() + 1).toString().padStart(2, 0))
+
+console.log(date.toLocaleDateString())
+console.log(date.toLocaleString("pt-Br", {
+  dateStyle: "long"
+}))
+
+console.log(date.toLocaleString("pt-BR", {
+  day: "2-digit",
+  month: '2-digit',
+  hour: "2-digit",
+  weekday: "long"
+}))
+
+
+const amount = 12.6
+
+console.log(amount.toLocaleString("pt-BR", {
+  style: "currency",
+  currency: "BRL"
+}))
+
+
+// Informações da localidade
+const currentLocale = Intl.DateTimeFormat().resolvedOptions()
+
+console.log(currentLocale)
+
+console.log(new Intl.DateTimeFormat('pt-BR').format(new Date()))
+
+const date = new Date();
+
+// Obtém a diferença em minutos do timezone
+console.log(date.getTimezoneOffset())
+
+// Obtém a diferença em horas do timezone
+console.log(date.getTimezoneOffset() / 60)
