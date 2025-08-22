@@ -1,0 +1,33 @@
+## Comandos docker
+docker build -t nome-imagem-livre . // subir image Dockefile
+
+docker image ls // Ver imagens
+
+docker run -p 3333:3333 -d nome-imagem-livre // Executar container
+
+docker container inspect nome/id-do-container // Ver detalhes do container
+
+docker ps // Ver container
+
+docker ps -a // Ver todos os container
+
+docker pause name/id // Pausar container
+
+docker unpause name/id // Despausar continar
+
+docker stop name/id // Parar container
+
+docker start name/id // Iniciar container
+
+docker rm name/id // Remover container
+
+docker rm -f name/id // Forçar remover container 
+
+docker rmi name/id // Remover imagem
+
+docker rmi -f name/id // Forçar remover imagem
+
+docker volume create nome-do-volume // Criar volume
+
+docker volume inspect api-volume
+
