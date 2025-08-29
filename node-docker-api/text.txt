@@ -31,3 +31,10 @@ docker volume create nome-do-volume // Criar volume
 
 docker volume inspect api-volume
 
+docker volume ls // Ver volumes
+
+docker run -v api-voluma:/usr/src/app -p 3333:3333 -d nome-imagem-livre // Executar container com volume
+
+docker container prune // Deletar todos os container
+
+docker run --name db-postgres -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -p 5432:5432 -d bitnami/postgresql:latest // Executar container com banco de dados
