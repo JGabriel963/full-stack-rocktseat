@@ -1,21 +1,30 @@
 import { useState, useTransition } from "react";
 import { Input } from "../components/input";
 import { Select } from "../components/select";
+
+import fileSvg from "../assets/file.svg";
 import { CATEGORIES, CATEGORIES_KEYS } from "../utils/categories";
+
 import { Upload } from "../components/upload";
 import { Button } from "../components/button";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 export function Refund() {
   const navigation = useNavigate();
-  const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
-  const [amount, setAmount] = useState("");
+  const params = useParams<{ id: string }>();
+
+  const [name, setName] = useState("Refund");
+  const [category, setCategory] = useState("123");
+  const [amount, setAmount] = useState("123");
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useTransition();
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    if (params.id) {
+      return navigation(-1);
+    }
 
     navigation("/confirm", { state: { fromSubmit: true } });
   }
@@ -38,6 +47,7 @@ export function Refund() {
         required
         legend="Nome da solicitação"
         value={name}
+        disabled={!!params.id}
         onChange={(e) => setName(e.target.value)}
       />
       <div className="flex gap-4">
@@ -45,6 +55,7 @@ export function Refund() {
           required
           legend="Categoria"
           value={category}
+          disabled={!!params.id}
           onChange={(e) => setCategory(e.target.value)}
         >
           {CATEGORIES_KEYS.map((category) => (
@@ -58,17 +69,29 @@ export function Refund() {
           required
           legend="Valor"
           value={amount}
+          disabled={!!params.id}
           onChange={(e) => setAmount(e.target.value)}
         />
       </div>
 
-      <Upload
-        filename={file?.name}
-        onChange={(e) => e.target.files && setFile(e.target.files[0])}
-        disabled={isLoading}
-      />
+      {params.id ? (
+        <a
+          href="https://miro.medium.com/1*fs0ScMc45X9QEwno8G414A.png"
+          target="_blank"
+          className="text-sm text-green-100 font-semibold flex items-center justify-center gap-2 hover:opacity-70"
+        >
+          <img src={fileSvg} alt="Ícone de arquivo" />
+          Abrir comprovantes
+        </a>
+      ) : (
+        <Upload
+          filename={file?.name}
+          onChange={(e) => e.target.files && setFile(e.target.files[0])}
+          disabled={isLoading}
+        />
+      )}
 
-      <Button type="submit">Enviar</Button>
+      <Button type="submit">{params.id ? "Voltar" : "Enviar"}</Button>
     </form>
   );
 }
