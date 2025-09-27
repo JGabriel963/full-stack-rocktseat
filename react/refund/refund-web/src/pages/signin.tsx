@@ -1,34 +1,59 @@
-import { useState, useTransition } from "react";
+import { useActionState } from "react";
+import { z, ZodError } from "zod";
 import { Button } from "../components/button";
 import { Input } from "../components/input";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
+import { api } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+
+const signInSchema = z.object({
+  email: z.email({ error: "E-mail inválido" }),
+  password: z.string().trim().min(1, { error: "Informe sua senha" }),
+});
 
 export function SignIn() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useTransition();
+  const auth = useAuth();
+  const [state, formAction, isLoading] = useActionState(onSubmit, null);
 
-  function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    alert("Enviado");
+  async function onSubmit(_: any, formData: FormData) {
+    try {
+      const data = signInSchema.parse({
+        email: formData.get("email"),
+        password: formData.get("password"),
+      });
+
+      const response = await api.post("/sessions", data);
+      auth.save(response.data);
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return toast.error(error.issues[0].message);
+      }
+
+      if (error instanceof AxiosError) {
+        return toast.error(error.response?.data.message);
+      }
+
+      return toast.error("Não foi possível realizar esta ação");
+    }
   }
 
   return (
-    <form onSubmit={onSubmit} className="w-full flex flex-col gap-4">
+    <form action={formAction} className="w-full flex flex-col gap-4">
       <Input
         required
+        name="email"
         legend="E-mail"
         type="email"
         placeholder="seu@email.com"
-        onChange={(e) => setEmail(e.target.value)}
-        value={email}
+        // defaultValue={state.email}
       />
       <Input
         required
+        name="password"
         legend="Senha"
         type="password"
         placeholder="******"
-        onChange={(e) => setPassword(e.target.value)}
-        value={password}
       />
       <Button type="submit" disabled={isLoading}>
         Entrar
