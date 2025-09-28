@@ -1,4 +1,4 @@
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Input } from "../components/input";
 import { Select } from "../components/select";
 
@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { AxiosError } from "axios";
 import { api } from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import { formatCurrency } from "../utils/format-currency";
 
 const refundSchema = z.object({
   name: z
@@ -32,6 +33,7 @@ export function Refund() {
   const [amount, setAmount] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useTransition();
+  const [fileURL, setFileURL] = useState<string | null>(null);
 
   async function createRefund() {
     try {
@@ -42,7 +44,11 @@ export function Refund() {
       const fileUploadForm = new FormData();
       fileUploadForm.append("file", file);
 
-      const response = await api.post("/uploads", fileUploadForm);
+      const response = await api.post("/uploads", fileUploadForm, {
+        headers: {
+          Authorization: `Bearer ${auth.session?.token}`,
+        },
+      });
 
       const data = refundSchema.parse({
         name,
@@ -85,6 +91,33 @@ export function Refund() {
       await createRefund();
     });
   }
+
+  async function fetchRefund(id: string) {
+    try {
+      const { data } = await api.get<RefundAPIResponse>(`/refunds/${id}`, {
+        headers: {
+          Authorization: `Bearer ${auth.session?.token}`,
+        },
+      });
+
+      setName(data.name);
+      setCategory(data.category);
+      setAmount(formatCurrency(data.amount));
+      setFileURL(data.filename);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return toast.error(error.response?.data.message);
+      }
+
+      toast.error("Não foi possível realizar esta ação");
+    }
+  }
+
+  useEffect(() => {
+    if (params.id) {
+      fetchRefund(params.id);
+    }
+  }, [params.id]);
 
   return (
     <form
@@ -133,7 +166,7 @@ export function Refund() {
 
       {params.id ? (
         <a
-          href="https://miro.medium.com/1*fs0ScMc45X9QEwno8G414A.png"
+          href={`http://localhost:3333/uploads/${fileURL}`}
           target="_blank"
           className="text-sm text-green-100 font-semibold flex items-center justify-center gap-2 hover:opacity-70"
         >

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "../components/input";
 import { Button } from "../components/button";
 import searchSvg from "../assets/search.svg";
@@ -6,6 +6,10 @@ import { RefundItem, type RefundItemProps } from "../components/refund-item";
 import { CATEGORIES } from "../utils/categories";
 import { formatCurrency } from "../utils/format-currency";
 import { Pagination } from "../components/pagination";
+import { api } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 const REFUND_EXAMPLE: RefundItemProps = {
   id: "123",
@@ -15,15 +19,49 @@ const REFUND_EXAMPLE: RefundItemProps = {
   categoryImg: CATEGORIES["transport"].icon,
 };
 
+const PER_PAGE = 3;
+
 export function Dashboard() {
+  const auth = useAuth();
   const [name, setName] = useState("");
   const [page, setPage] = useState(1);
-  const [totalOfPage, setTotalOfPage] = useState(10);
+  const [totalOfPage, setTotalOfPage] = useState(0);
   const [refunds, setRefunds] = useState<RefundItemProps[]>([REFUND_EXAMPLE]);
 
-  function fetchRefund(e: React.FormEvent) {
+  async function fetchRefund() {
+    try {
+      const response = await api.get<RefundsPaginationAPIResponse>(
+        `/refunds?name=${name}&page=${page}&perPage=${PER_PAGE}`,
+        {
+          headers: {
+            Authorization: `Bearer ${auth.session?.token}`,
+          },
+        }
+      );
+
+      setRefunds(
+        response.data.refunds.map((refund) => ({
+          id: refund.id,
+          name: refund.name,
+          category: CATEGORIES[refund.category].name,
+          amount: formatCurrency(refund.amount),
+          categoryImg: CATEGORIES[refund.category].icon,
+        }))
+      );
+
+      setTotalOfPage(response.data.pagination.totalPages);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        return toast.error(error.response?.data.message);
+      }
+
+      return toast.error("Não foi possível realizar esta ação");
+    }
+  }
+
+  function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    console.log(name);
+    fetchRefund();
   }
 
   function handlePagination(action: "next" | "previous") {
@@ -40,12 +78,16 @@ export function Dashboard() {
     });
   }
 
+  useEffect(() => {
+    fetchRefund();
+  }, [page]);
+
   return (
     <div className="bg-gray-500 rounded-xl p-10 md:min-w-[768px]">
       <h1 className="text-gray-100 font-bold text-xl flex-1">Solicitações</h1>
 
       <form
-        onSubmit={fetchRefund}
+        onSubmit={onSubmit}
         className="flex items-center justify-between  pb-6 border-b-[1px] border-b-gray-400 md:flex-row gap-2 mt-6"
       >
         <Input
