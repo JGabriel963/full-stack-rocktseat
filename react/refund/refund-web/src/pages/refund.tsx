@@ -8,16 +8,71 @@ import { CATEGORIES, CATEGORIES_KEYS } from "../utils/categories";
 import { Upload } from "../components/upload";
 import { Button } from "../components/button";
 import { useNavigate, useParams } from "react-router";
+import { z, ZodError } from "zod";
+import { toast } from "sonner";
+import { AxiosError } from "axios";
+import { api } from "../services/api";
+import { useAuth } from "../context/AuthContext";
+
+const refundSchema = z.object({
+  name: z
+    .string()
+    .min(3, { error: "Informe um nome claro para sua solicitação" }),
+  category: z.string().min(1, { error: "Selecione uma categoria" }),
+  amount: z.coerce.number().positive(),
+});
 
 export function Refund() {
+  const auth = useAuth();
   const navigation = useNavigate();
   const params = useParams<{ id: string }>();
 
-  const [name, setName] = useState("Refund");
-  const [category, setCategory] = useState("123");
-  const [amount, setAmount] = useState("123");
+  const [name, setName] = useState("");
+  const [category, setCategory] = useState("");
+  const [amount, setAmount] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useTransition();
+
+  async function createRefund() {
+    try {
+      if (!file) {
+        return toast.error("Selecione um arquivo de comprovante");
+      }
+
+      const fileUploadForm = new FormData();
+      fileUploadForm.append("file", file);
+
+      const response = await api.post("/uploads", fileUploadForm);
+
+      const data = refundSchema.parse({
+        name,
+        category,
+        amount: amount.replace(",", "."),
+      });
+
+      await api.post(
+        "/refunds",
+        { ...data, filename: response.data.filename },
+        {
+          headers: {
+            Authorization: `Bearer ${auth.session?.token}`,
+          },
+        }
+      );
+
+      navigation("/confirm", { state: { fromSubmit: true } });
+    } catch (error) {
+      if (error instanceof ZodError) {
+        return toast.error(error.issues[0].message);
+      }
+
+      if (error instanceof AxiosError) {
+        return toast.error(error.response?.data.message);
+      }
+
+      return toast.error("Não foi possível realizar esta ação");
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,7 +81,9 @@ export function Refund() {
       return navigation(-1);
     }
 
-    navigation("/confirm", { state: { fromSubmit: true } });
+    setIsLoading(async () => {
+      await createRefund();
+    });
   }
 
   return (
@@ -91,7 +148,9 @@ export function Refund() {
         />
       )}
 
-      <Button type="submit">{params.id ? "Voltar" : "Enviar"}</Button>
+      <Button type="submit" isLoading={isLoading}>
+        {params.id ? "Voltar" : "Enviar"}
+      </Button>
     </form>
   );
 }
